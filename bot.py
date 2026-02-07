@@ -1,5 +1,7 @@
 import os
 import subprocess
+import stat
+import urllib.request
 from datetime import date
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -14,7 +16,7 @@ from telegram.ext import (
 # =====================
 # CONFIG (Railway Safe)
 # =====================
-TOKEN = os.getenv("BOT_TOKEN")  # مهم جدا
+TOKEN = os.getenv("BOT_TOKEN")
 BASE_DIR = os.getcwd()
 
 INPUT_DIR = os.path.join(BASE_DIR, "input")
@@ -53,18 +55,35 @@ def increment_usage(user_id):
     user_usage[user_id]["count"] += 1
 
 # =====================
-# FFMPEG RUNNER (FIXED)
+# FFMPEG (AUTO DOWNLOAD)
 # =====================
-import shutil
+FFMPEG_PATH = "/app/ffmpeg"
+
+def ensure_ffmpeg():
+    if os.path.exists(FFMPEG_PATH):
+        return
+
+    url = "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
+    archive = "/app/ffmpeg.tar.xz"
+
+    urllib.request.urlretrieve(url, archive)
+
+    subprocess.run(
+        ["tar", "-xf", archive, "-C", "/app"],
+        check=True
+    )
+
+    folder = next(d for d in os.listdir("/app") if d.startswith("ffmpeg-"))
+    os.rename(f"/app/{folder}/ffmpeg", FFMPEG_PATH)
+
+    os.chmod(
+        FFMPEG_PATH,
+        os.stat(FFMPEG_PATH).st_mode | stat.S_IEXEC
+    )
 
 async def run_ffmpeg(cmd):
-    ffmpeg_path = shutil.which("ffmpeg")
-
-    if not ffmpeg_path:
-        raise FileNotFoundError("ffmpeg not found in PATH")
-
-    # نعوّض ffmpeg بالمسار الحقيقي
-    cmd[0] = ffmpeg_path
+    ensure_ffmpeg()
+    cmd[0] = FFMPEG_PATH
 
     process = subprocess.Popen(
         cmd,
@@ -145,9 +164,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["mode"] = q.data
 
     if q.data in ("blur", "bg"):
-        await q.edit_message_text(
-            "✍️ اكتب النسبة (100 – 150)\nمثال: 115"
-        )
+        await q.edit_message_text("✍️ اكتب النسبة (100 – 150)\nمثال: 115")
         return
 
     await process_video(q.message, context, 100)
