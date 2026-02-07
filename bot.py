@@ -23,7 +23,7 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 AUDIO_DIR = os.path.join(BASE_DIR, "audio")
 
 LOGO_PATH = os.path.join(BASE_DIR, "logo.png")
-BG_PATH = os.path.join(BASE_DIR, "BG.jpeg")
+BG_PATH = os.path.join(BASE_DIR, "BG.jpg")
 
 LOGO_WIDTH = 250
 LOGO_MARGIN = 50
