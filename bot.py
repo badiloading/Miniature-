@@ -55,15 +55,24 @@ def increment_usage(user_id):
 # =====================
 # FFMPEG RUNNER (FIXED)
 # =====================
+import shutil
+
 async def run_ffmpeg(cmd):
+    ffmpeg_path = shutil.which("ffmpeg")
+
+    if not ffmpeg_path:
+        raise FileNotFoundError("ffmpeg not found in PATH")
+
+    # نعوّض ffmpeg بالمسار الحقيقي
+    cmd[0] = ffmpeg_path
+
     process = subprocess.Popen(
         cmd,
-        stdout=subprocess.DEVNULL,   # مهم في Railway
+        stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
         text=True
     )
 
-    # لازم نقرى stderr كامل باش ffmpeg ما يعلقش
     for _ in process.stderr:
         pass
 
