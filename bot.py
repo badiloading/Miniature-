@@ -1,4 +1,3 @@
- 
 import os
 import subprocess
 from datetime import date
@@ -15,7 +14,7 @@ from telegram.ext import (
 # =====================
 # CONFIG (Railway Safe)
 # =====================
-TOKEN = os.getenv("BOT_TOKEN")  # <-- مهم
+TOKEN = os.getenv("BOT_TOKEN")  # مهم جدا
 BASE_DIR = os.getcwd()
 
 INPUT_DIR = os.path.join(BASE_DIR, "input")
@@ -54,17 +53,24 @@ def increment_usage(user_id):
     user_usage[user_id]["count"] += 1
 
 # =====================
-# FFMPEG RUNNER
+# FFMPEG RUNNER (FIXED)
 # =====================
 async def run_ffmpeg(cmd):
     process = subprocess.Popen(
         cmd,
+        stdout=subprocess.DEVNULL,   # مهم في Railway
         stderr=subprocess.PIPE,
-        universal_newlines=True
+        text=True
     )
+
+    # لازم نقرى stderr كامل باش ffmpeg ما يعلقش
     for _ in process.stderr:
         pass
+
     process.wait()
+
+    if process.returncode != 0:
+        raise RuntimeError("FFmpeg failed")
 
 # =====================
 # /start
